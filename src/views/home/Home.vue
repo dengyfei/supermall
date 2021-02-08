@@ -6,8 +6,9 @@
     <home-swiper :banners='banners'></home-swiper>
     <recommend-view :recommends='recommends'/>
     <feature-view/>
-    <tab-control :title="['流行', '新款', '精选']" class="tab-control"/>
-    <goods-list :goods='goods.pop.list'/>
+    <tab-control :title="['流行', '新款', '精选']" 
+    class="tab-control" @tabClick='tabClick'/>
+    <goods-list :goods='showGoods' />
     <ul>
       <li>列表</li>
       <li>列表</li>
@@ -126,6 +127,7 @@ import {getHomeMultidata, getHomeGoods} from 'network/home'
 
 export default {
   name: 'Home',
+
   components: {
     HomeSwiper,
     RecommendView,
@@ -134,6 +136,7 @@ export default {
     TabControl,
     GoodsList
   },
+
   data(){
     return {
       banners: [],
@@ -142,9 +145,11 @@ export default {
         'pop': {page: 0, list: []},
         'new': {page: 0, list: []},
         'sell': {page: 0, list: []}
-      }
+      },
+      currentType: 'pop'
     }
   },
+
   created() {
     //1.请求轮播图及推荐数据
     this.getHomeMultidata()
@@ -153,7 +158,35 @@ export default {
     this.getHomeGoods('new')
     this.getHomeGoods('sell')
   },
+
+  computed: {
+    showGoods() {
+      return this.goods[this.currentType].list
+    }
+  },
+
   methods: {
+    /**
+     * 普通方法
+     */
+    tabClick(index) {
+      switch (index) {
+        case 0: 
+          this.currentType = 'pop'
+          break
+        case 1:
+          this.currentType = 'new'
+          break
+        case 2:
+          this.currentType = 'sell'
+          break
+        console.log(this.currentType)
+      }
+    },
+
+    /**
+     * 网络请求相关的方法
+     */
     getHomeMultidata() {
       getHomeMultidata().then(res => {
         this.banners = res.data.banner.list;
