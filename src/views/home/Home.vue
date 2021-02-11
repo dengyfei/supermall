@@ -3,114 +3,21 @@
     <nav-bar class="home-nav">
       <div slot="center">购物车</div>
     </nav-bar>
-    <home-swiper :banners='banners'></home-swiper>
-    <recommend-view :recommends='recommends'/>
-    <feature-view/>
-    <tab-control :title="['流行', '新款', '精选']" 
-    class="tab-control" @tabClick='tabClick'/>
-    <goods-list :goods='showGoods' />
-    <ul>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-    </ul>
+    <scroll class="content" 
+      ref="scroll" 
+      :probe-type="3" 
+      @scroll="contentScroll"
+      :pullUpLoad="true"
+      @pullingUp="loadMore">
+      <home-swiper :banners='banners'></home-swiper>
+      <recommend-view :recommends='recommends'/>
+      <feature-view/>
+      <tab-control :title="['流行', '新款', '精选']" 
+      class="tab-control" @tabClick='tabClick'/>
+      <goods-list :goods='showGoods' />
+    </scroll>
+    <back-top @click.native="backClick" v-show="isShow"/>
+    
   </div>
 </template>
 
@@ -122,8 +29,10 @@ import GoodsList from 'components/content/goods/GoodsList'
 
 import NavBar from 'components/common/navbar/NavBar'
 import TabControl from 'components/content/TabControl'
+import Scroll from 'components/common/scroll/Scroll'
 
 import {getHomeMultidata, getHomeGoods} from 'network/home'
+import BackTop from 'components/content/backTop/BackTop.vue'
 
 export default {
   name: 'Home',
@@ -134,7 +43,9 @@ export default {
     FeatureView,
     NavBar,
     TabControl,
-    GoodsList
+    GoodsList,
+    Scroll,
+    BackTop
   },
 
   data(){
@@ -146,7 +57,8 @@ export default {
         'new': {page: 0, list: []},
         'sell': {page: 0, list: []}
       },
-      currentType: 'pop'
+      currentType: 'pop',
+      isShow: false
     }
   },
 
@@ -180,8 +92,18 @@ export default {
         case 2:
           this.currentType = 'sell'
           break
-        console.log(this.currentType)
       }
+    },
+    backClick() {
+      this.$refs.scroll.scrollTo(0, 0, 500)
+    },
+    contentScroll(poistion) {
+      this.isShow = (-poistion.y) > 1000
+    },
+    loadMore() {
+      this.getHomeGoods(this.currentType)
+      this.$refs.scroll.finishPullUp()
+      this.$refs.scroll.scroll.refresh()
     },
 
     /**
@@ -199,6 +121,7 @@ export default {
         this.goods[type].list.push(...res.data.list)
       })
       this.goods[type].page += 1
+
     }
   }
 }
@@ -206,7 +129,9 @@ export default {
 
 <style scoped>
   #home {
-    padding-top: 40px;
+    padding-top: 44px;
+    height: 100vh;
+    position: relative;
   }
 
   .home-nav {
@@ -223,5 +148,14 @@ export default {
     position: sticky;
     top: 44px;
     z-index: 9;
+  }
+
+  .content {
+    overflow: hidden;
+    position: absolute;
+    top: 44px;
+    bottom: 49px;
+    left: 0;
+    right: 0;
   }
 </style>
