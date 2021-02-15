@@ -128,7 +128,7 @@ export default {
       this.getHomeGoods(this.currentType)
       this.$refs.scroll.finishPullUp()
       //实时刷新
-      // this.$refs.scroll.scroll.refresh()
+      this.$refs.scroll.scroll.refresh()
     },
     HomeSwiper() {
       this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop
